@@ -157,15 +157,44 @@ make smoke
 
 You should see `✅  API connection OK`. If not, check your `.env` file.
 
-### 5. Rasa environment (Exercise 3 only)
+### 5. Set up the Rasa Pro environment (Exercise 3 only)
 
+Exercise 3 uses **Rasa Pro CALM** — a commercial product with a free
+Developer Edition licence.
+
+#### Get your free licence (2 minutes)
+
+1. Go to **https://rasa.com/rasa-pro-developer-edition-license-key-request**
+2. Enter your email address and accept the licence terms
+3. Rasa will email you a licence key — check your inbox and spam folder
+4. Open your `.env` file and paste the key:
+```
+   RASA_PRO_LICENSE=the-long-key-rasa-emailed-you
+```
+
+The Developer Edition is completely free and allows up to 1,000 conversations
+per month running locally. No credit card required.
+
+#### Install the Rasa environment
+
+Once your licence key is in `.env`, run:
 ```bash
 make install-rasa
 ```
 
-Rasa only works on Python 3.10. `make install-rasa` downloads Python 3.10 if
-needed and installs Rasa into a separate environment. Takes 3–5 minutes the first
-time — this is normal.
+uv will download Python 3.10 if needed and install Rasa Pro into a
+separate environment inside `exercise3_rasa/.venv/`. This takes 3–5
+minutes the first time — Rasa Pro has many dependencies.
+
+Verify it worked:
+```bash
+cd exercise3_rasa
+uv run rasa --version
+```
+
+You should see `Rasa Version : 3.9.x`. If you see an error about the
+licence key, double-check that `RASA_PRO_LICENSE` is set correctly in
+`.env` (no quotes, no spaces around the `=`).
 
 ---
 

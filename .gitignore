@@ -148,3 +148,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .abstra/
+
+# uv.lock files are intentionally committed — they pin dependencies for
+# reproducible student environments. Do not add them here.
+# uv.lock              ← intentionally tracked
+# exercise3_rasa/uv.lock  ← intentionally tracked
