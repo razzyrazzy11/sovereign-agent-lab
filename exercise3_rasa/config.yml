@@ -1,0 +1,35 @@
+recipe: default.v1
+language: en
+
+# ── NLU Pipeline ──────────────────────────────────────────────────────────────
+# Converts raw text into intent + entity labels.
+# DIETClassifier is the main ML component (100 training epochs).
+# FallbackClassifier fires when confidence is below 30%.
+
+pipeline:
+  - name: WhitespaceTokenizer
+  - name: RegexFeaturizer
+  - name: LexicalSyntacticFeaturizer
+  - name: CountVectorsFeaturizer
+  - name: CountVectorsFeaturizer
+    analyzer: char_wb
+    min_ngram: 1
+    max_ngram: 4
+  - name: DIETClassifier
+    epochs: 100
+    constrain_similarities: true
+  - name: FallbackClassifier
+    threshold: 0.3
+    ambiguity_threshold: 0.1
+
+# ── Dialogue Policies ─────────────────────────────────────────────────────────
+# We use ONLY rule-based policies — no learned dialogue (no TEDPolicy).
+# This is intentional. The confirmation agent must be predictable.
+# A learned policy might generalise unexpectedly. Rules do exactly what you wrote.
+
+policies:
+  - name: MemoizationPolicy
+  - name: RulePolicy
+    core_fallback_threshold: 0.3
+    core_fallback_action_name: "action_default_fallback"
+    enable_fallback_prediction: true

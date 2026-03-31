@@ -1,0 +1,40 @@
+[project]
+name = "sovereign-agent-rasa"
+version = "0.1.0"
+description = "Rasa CALM confirmation agent — Exercise 3"
+# Rasa 3.6.x officially supports Python 3.8–3.10 only.
+# This is a hard constraint — Rasa will not install on 3.11+.
+# uv reads this and uses Python 3.10 automatically when you run `uv sync`
+# inside this directory (because .python-version pins 3.10 here too).
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    # Open-source Rasa — includes both the core engine and the SDK
+    "rasa==3.6.20",
+    "rasa-sdk>=3.6.0,<3.7.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+dev = [
+    "ruff>=0.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# The actions/ directory is the only Python package in this project.
+packages = ["actions"]
+
+[tool.uv]
+# uv manages the virtual environment for this sub-project.
+# Run `uv sync` from inside exercise3_rasa/ to set it up.
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [".venv", ".rasa", "models", "__pycache__"]

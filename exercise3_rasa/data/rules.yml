@@ -1,0 +1,58 @@
+version: "3.1"
+
+# ── Dialogue Rules ────────────────────────────────────────────────────────────
+# Every possible conversation path is listed here explicitly.
+# Compare this file to the Mermaid output from exercise2_langgraph.py task_d.
+#
+# LangGraph: one loop node that decides its own path at runtime
+# Rasa:      this file — every branch written by you in advance
+#
+# Neither is inherently better. The choice depends on the problem:
+#   Open-ended research (Problem A) → one loop is appropriate
+#   Bounded confirmation (Problem B) → explicit branches are appropriate
+
+rules:
+
+- rule: Greet the pub manager
+  steps:
+  - intent: greet
+  - action: utter_greet
+
+- rule: Start collecting booking details
+  steps:
+  - intent: start_booking_confirmation
+  - action: booking_confirmation_form
+  - active_loop: booking_confirmation_form
+
+- rule: Submit when all slots are filled
+  condition:
+  - active_loop: booking_confirmation_form
+  steps:
+  - action: booking_confirmation_form
+  - active_loop: null
+  - slot_was_set:
+    - requested_slot: null
+  - action: action_validate_booking
+
+# During the form: handle out-of-scope WITHOUT cancelling the form.
+# The agent declines and immediately continues collecting the current slot.
+# This is Conversation 3 in your exercises.
+
+- rule: Handle out of scope during form
+  condition:
+  - active_loop: booking_confirmation_form
+  steps:
+  - intent: out_of_scope
+  - action: utter_out_of_scope
+  - action: booking_confirmation_form
+  - active_loop: booking_confirmation_form
+
+- rule: Handle out of scope outside form
+  steps:
+  - intent: out_of_scope
+  - action: utter_out_of_scope
+
+- rule: Low confidence fallback
+  steps:
+  - intent: nlu_fallback
+  - action: utter_default

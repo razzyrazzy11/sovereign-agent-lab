@@ -1,0 +1,112 @@
+version: "3.1"
+
+# ── NLU Training Data ─────────────────────────────────────────────────────────
+# Training examples for each intent. More examples = more robust classification.
+#
+# NOTE: There is no "inform" intent here.
+# When the form is active and collecting a slot, Rasa captures the user's text
+# directly via from_text mapping — regardless of intent.
+# The validate_booking_confirmation_form action in actions.py then parses numbers.
+
+nlu:
+
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey
+    - good morning
+    - good afternoon
+    - hi there
+    - hello there
+    - morning
+    - afternoon
+    - howdy
+    - hiya
+
+- intent: start_booking_confirmation
+  examples: |
+    - I'm calling to confirm a booking
+    - calling about tonight's reservation
+    - hi, I'm calling about the booking for tonight
+    - I want to confirm the event booking
+    - calling from The Haymarket Vaults
+    - I'm the pub manager calling to confirm
+    - we have your booking for tonight
+    - calling to confirm your reservation
+    - I'm ringing about tonight's event
+    - just calling to confirm the details for this evening
+    - hi, this is the venue manager
+    - calling about the group booking for tonight
+    - I'd like to confirm the booking details
+    - reaching out about tonight's booking
+    - we received your inquiry about tonight
+    - confirming your event booking
+    - I'm calling regarding the event tonight
+    - this is the venue, calling about your booking
+    - I need to confirm a reservation for tonight
+    - calling to lock in tonight's booking
+
+- intent: affirm
+  examples: |
+    - yes
+    - yes that's right
+    - correct
+    - yep
+    - absolutely
+    - that's fine
+    - yes please
+    - sure
+    - sounds good
+    - confirmed
+    - that's correct
+    - right
+    - exactly
+    - indeed
+    - that works
+    - perfect
+
+- intent: deny
+  examples: |
+    - no
+    - nope
+    - that's not right
+    - incorrect
+    - that's wrong
+    - no that's not it
+    - not quite
+    - negative
+    - I don't think so
+
+- intent: out_of_scope
+  examples: |
+    - can you arrange parking for the speakers
+    - what's on the menu tonight
+    - do you do weddings
+    - can you recommend a nearby hotel
+    - I need a DJ for the event
+    - can you sort the AV equipment
+    - is there wifi available
+    - can you arrange table decorations
+    - what time do you close
+    - can you organise transport for guests
+    - do you have a PA system
+    - can you arrange flowers
+    - what are your opening hours
+    - do you have a cloakroom
+    - can I speak to the chef
+    - can you cater for nut allergies
+    - is there a dance floor
+    - can you do a cash bar
+    - what's the dress code
+    - can you arrange a live band
+    - is there disabled access
+    - can you provide a podium
+    - what about a photographer
+    - can you help with social media
+    - I need to book accommodation nearby
+    - can you arrange a bus for guests
+    - what's the nearest tube station
+    - do you have outdoor heaters
+    - can you set up a projector
+    - is there a green room for speakers

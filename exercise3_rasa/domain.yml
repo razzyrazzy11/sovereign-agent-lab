@@ -1,0 +1,103 @@
+version: "3.1"
+
+# ── Intents ───────────────────────────────────────────────────────────────────
+# Everything the pub manager might be trying to do.
+# Anything not listed here → out_of_scope.
+
+intents:
+  - greet
+  - start_booking_confirmation
+  - affirm
+  - deny
+  - out_of_scope
+
+# ── Slots ─────────────────────────────────────────────────────────────────────
+# The agent's clipboard. Information collected during the conversation.
+# from_text means: capture whatever the user says when this slot is being asked.
+# The form validation action in actions.py parses the number from the raw text.
+#
+# TASK B: Add requires_quiet_room slot here, in forms, and in responses.
+
+slots:
+  guest_count:
+    type: any
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_confirmation_form
+            requested_slot: guest_count
+
+  vegan_count:
+    type: any
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_confirmation_form
+            requested_slot: vegan_count
+
+  deposit_amount_gbp:
+    type: any
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_confirmation_form
+            requested_slot: deposit_amount_gbp
+
+  booking_valid:
+    type: bool
+    influence_conversation: true
+    mappings:
+      - type: custom
+
+  rejection_reason:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: custom
+
+# ── Forms ─────────────────────────────────────────────────────────────────────
+# A form collects required slots in sequence, automatically asking for each.
+
+forms:
+  booking_confirmation_form:
+    required_slots:
+      - guest_count
+      - vegan_count
+      - deposit_amount_gbp
+
+# ── Responses ─────────────────────────────────────────────────────────────────
+
+responses:
+  utter_greet:
+    - text: >
+        Hello, you've reached the Edinburgh event booking line.
+        I can confirm venue bookings for tonight's event.
+        How can I help?
+
+  utter_ask_guest_count:
+    - text: "How many guests are you confirming for tonight's event?"
+
+  utter_ask_vegan_count:
+    - text: "And how many of those guests will need vegan meals?"
+
+  utter_ask_deposit_amount_gbp:
+    - text: "What deposit amount in GBP are you proposing to secure the booking?"
+
+  utter_out_of_scope:
+    - text: >
+        I can only help with confirming tonight's venue booking.
+        For anything else, please contact the event organiser directly.
+
+  utter_default:
+    - text: >
+        I didn't quite catch that. I'm here to confirm tonight's venue booking —
+        could you start by telling me how many guests you're expecting?
+
+# ── Actions ───────────────────────────────────────────────────────────────────
+
+actions:
+  - validate_booking_confirmation_form
+  - action_validate_booking
