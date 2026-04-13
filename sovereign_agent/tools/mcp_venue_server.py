@@ -96,5 +96,6 @@ def get_venue_details(pub_name: str) -> str:
 
 
 if __name__ == "__main__":
-    print(f"Edinburgh Venue MCP Server | {len(VENUES)} venues | stdio transport")
+    print(
+        f"Edinburgh Venue MCP Server | {len(VENUES)} venues | stdio transport")
     mcp.run()

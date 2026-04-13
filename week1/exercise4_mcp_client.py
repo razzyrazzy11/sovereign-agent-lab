@@ -44,14 +44,16 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from pydantic import create_model
 
 load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Path to the shared MCP server in sovereign_agent/
-SERVER_SCRIPT = str(Path(__file__).parent.parent / "sovereign_agent" / "tools" / "mcp_venue_server.py")
-OUTPUTS_DIR   = Path(__file__).parent / "outputs"
+SERVER_SCRIPT = str(Path(__file__).parent.parent /
+                    "sovereign_agent" / "tools" / "mcp_venue_server.py")
+OUTPUTS_DIR = Path(__file__).parent / "outputs"
 OUTPUTS_DIR.mkdir(exist_ok=True)
 
 
@@ -67,7 +69,8 @@ OUTPUTS_DIR.mkdir(exist_ok=True)
 def _make_mcp_caller(tool_name: str, server_script: str):
     def call(**kwargs) -> str:
         async def _inner() -> str:
-            params = StdioServerParameters(command=sys.executable, args=[server_script])
+            params = StdioServerParameters(
+                command=sys.executable, args=[server_script])
             async with stdio_client(params) as (r, w):
                 async with ClientSession(r, w) as session:
                     await session.initialize()
@@ -86,17 +89,30 @@ async def discover_tools(server_script: str) -> list:
     mcp_venue_server.py and this function picks it up automatically.
     No changes needed here.
     """
-    params = StdioServerParameters(command=sys.executable, args=[server_script])
+    params = StdioServerParameters(
+        command=sys.executable, args=[server_script])
     async with stdio_client(params) as (r, w):
         async with ClientSession(r, w) as session:
             await session.initialize()
-            raw   = await session.list_tools()
+            raw = await session.list_tools()
             tools = []
             for t in raw.tools:
+                # Build args schema from MCP tool's input schema
+                schema = t.inputSchema or {"type": "object", "properties": {}}
+                fields = {}
+                type_map = {"string": str, "integer": int,
+                            "number": float, "boolean": bool}
+                for pname, pinfo in schema.get("properties", {}).items():
+                    ptype = type_map.get(pinfo.get("type", "string"), str)
+                    fields[pname] = (ptype, pinfo.get("description", ""))
+
+                ArgsModel = create_model(f"{t.name}_args", **fields)
+
                 lc_tool = StructuredTool.from_function(
                     func=_make_mcp_caller(t.name, server_script),
                     name=t.name,
                     description=t.description or f"MCP tool: {t.name}",
+                    args_schema=ArgsModel,
                 )
                 tools.append(lc_tool)
             return tools, [t.name for t in raw.tools]
@@ -107,8 +123,13 @@ async def discover_tools(server_script: str) -> list:
 def extract_trace(result: dict) -> list:
     trace = []
     for m in result["messages"]:
-        role    = getattr(m, "type", "unknown")
+        role = getattr(m, "type", "unknown")
         content = m.content
+        # OpenAI-compatible models store tool calls here
+        if hasattr(m, "tool_calls") and m.tool_calls:
+            for tc in m.tool_calls:
+                trace.append({"role": "tool_call", "tool": tc["name"],
+                              "args": tc.get("args", {})})
         if isinstance(content, list):
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "tool_use":
@@ -145,15 +166,24 @@ async def main() -> None:
     tools, tool_names = await discover_tools(SERVER_SCRIPT)
     print(f"\n  Discovered {len(tools)} tools: {tool_names}")
 
-    agent  = create_react_agent(llm, tools)
-    output = {"server_script": SERVER_SCRIPT, "tools_discovered": tool_names, "queries": {}}
+    agent = create_react_agent(
+        llm,
+        tools,
+        prompt=(
+            "You are a venue research assistant for Edinburgh events. "
+            "Always use the provided tools to complete tasks — never output raw JSON. "
+            "Call tools one at a time and wait for each result before deciding the next step."
+        ),
+    )
+    output = {"server_script": SERVER_SCRIPT,
+              "tools_discovered": tool_names, "queries": {}}
 
     # ── Query 1: search + detail fetch ────────────────────────────────────────
     q1 = "Find Edinburgh venues for 160 guests with vegan options and give me the full address of the best match."
     print(f"\n{'=' * 65}")
     print("  Query 1 — Search + Detail Fetch")
     print(f"{'=' * 65}\n")
-    r1     = agent.invoke({"messages": [("user", q1)]})
+    r1 = agent.invoke({"messages": [("user", q1)]})
     trace1 = extract_trace(r1)
     print_trace(trace1)
     output["queries"]["query_1"] = {"query": q1, "trace": trace1}
@@ -163,7 +193,7 @@ async def main() -> None:
     print(f"\n{'=' * 65}")
     print("  Query 2 — Impossible Constraint")
     print(f"{'=' * 65}\n")
-    r2     = agent.invoke({"messages": [("user", q2)]})
+    r2 = agent.invoke({"messages": [("user", q2)]})
     trace2 = extract_trace(r2)
     print_trace(trace2)
     output["queries"]["query_2"] = {"query": q2, "trace": trace2}

@@ -22,8 +22,8 @@ import json
 import sys
 from pathlib import Path
 
-ROOT    = Path(__file__).parent.parent
-WEEK1   = ROOT / "week1"
+ROOT = Path(__file__).parent.parent
+WEEK1 = ROOT / "week1"
 OUTPUTS = WEEK1 / "outputs"
 ANSWERS = WEEK1 / "answers"
 
@@ -52,7 +52,7 @@ def load_answers(name: str):
     if not path.exists():
         return None
     spec = importlib.util.spec_from_file_location(name, path)
-    mod  = importlib.util.module_from_spec(spec)
+    mod = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(mod)
         return mod
@@ -105,19 +105,21 @@ def check_ex1() -> None:
                 "PART_B_PLAIN_CORRECT", "PART_B_XML_CORRECT", "PART_B_SANDWICH_CORRECT",
                 "PART_B_CHANGED_RESULTS", "PART_C_WAS_RUN"]:
         val = getattr(a, var, None)
-        record(PASS if val is not None else FAIL, f"{var} set to True or False")
+        record(PASS if val is not None else FAIL,
+               f"{var} set to True or False")
 
     # Check Part A answers are consistent with JSON
     for cond in ["PLAIN", "XML", "SANDWICH"]:
         ans = getattr(a, f"PART_A_{cond}_CORRECT", None)
         jsn = out.get("part_a", {}).get(cond, {}).get("correct")
         if ans is not None and jsn is not None and ans != jsn:
-            record(WARN, f"PART_A_{cond}_CORRECT ({ans}) differs from JSON ({jsn}) — re-check your output")
+            record(
+                WARN, f"PART_A_{cond}_CORRECT ({ans}) differs from JSON ({jsn}) — re-check your output")
 
     for var, min_w in [("PART_A_EXPLANATION", 30), ("PART_B_HARDEST_DISTRACTOR", 20),
-                        ("PART_C_EXPLANATION", 30), ("CORE_LESSON", 40)]:
+                       ("PART_C_EXPLANATION", 30), ("CORE_LESSON", 40)]:
         val = getattr(a, var, "")
-        wc  = word_count(val)
+        wc = word_count(val)
         record(
             PASS if is_filled(val) and wc >= min_w else FAIL,
             f"{var} filled in and ≥ {min_w} words (found {wc})",
@@ -142,30 +144,37 @@ def check_ex2() -> None:
     # Check that sovereign_agent modules import cleanly
     for module_path, import_name in [
         (ROOT / "sovereign_agent" / "tools" / "venue_tools.py",    "venue_tools"),
-        (ROOT / "sovereign_agent" / "agents" / "research_agent.py", "research_agent"),
+        (ROOT / "sovereign_agent" / "agents" /
+         "research_agent.py", "research_agent"),
     ]:
         if module_path.exists():
-            spec = importlib.util.spec_from_file_location(import_name, module_path)
-            mod  = importlib.util.module_from_spec(spec)
+            spec = importlib.util.spec_from_file_location(
+                import_name, module_path)
+            mod = importlib.util.module_from_spec(spec)
             try:
                 spec.loader.exec_module(mod)
-                record(PASS, f"sovereign_agent/{module_path.name} imports without error")
+                record(
+                    PASS, f"sovereign_agent/{module_path.name} imports without error")
             except Exception as e:
-                record(FAIL, f"sovereign_agent/{module_path.name} import error: {e}")
+                record(
+                    FAIL, f"sovereign_agent/{module_path.name} import error: {e}")
         else:
-            record(FAIL, f"sovereign_agent/{module_path.parent.name}/{module_path.name} not found")
+            record(
+                FAIL, f"sovereign_agent/{module_path.parent.name}/{module_path.name} not found")
 
     # Check generate_event_flyer is not still a stub
     vt_path = ROOT / "sovereign_agent" / "tools" / "venue_tools.py"
     if vt_path.exists():
-        spec = importlib.util.spec_from_file_location("venue_tools_check", vt_path)
-        mod  = importlib.util.module_from_spec(spec)
+        spec = importlib.util.spec_from_file_location(
+            "venue_tools_check", vt_path)
+        mod = importlib.util.module_from_spec(spec)
         try:
             spec.loader.exec_module(mod)
             fn = getattr(mod, "generate_event_flyer", None)
             if fn:
                 raw_fn = fn.func if hasattr(fn, "func") else fn
-                raw    = raw_fn(pub_name="Test", guest_count=10, event_theme="test")
+                raw = raw_fn(pub_name="Test", guest_count=10,
+                             event_theme="test")
                 parsed = json.loads(raw) if isinstance(raw, str) else raw
                 is_stub = "STUB" in str(parsed.get("error", ""))
                 record(
@@ -189,14 +198,16 @@ def check_ex2() -> None:
 
     venue = getattr(a, "TASK_A_CONFIRMED_VENUE", "FILL_ME_IN")
     record(
-        PASS if venue in {"The Albanach", "The Haymarket Vaults", "none"} else FAIL,
+        PASS if venue in {"The Albanach",
+                          "The Haymarket Vaults", "none"} else FAIL,
         f"TASK_A_CONFIRMED_VENUE is a known venue name (got: '{venue}')",
     )
 
     for var in ["TASK_A_OUTDOOR_OK", "TASK_B_IMPLEMENTED",
                 "SCENARIO_2_HALLUCINATED", "SCENARIO_3_TRIED_A_TOOL"]:
         val = getattr(a, var, None)
-        record(PASS if val is not None else FAIL, f"{var} set to True or False")
+        record(PASS if val is not None else FAIL,
+               f"{var} set to True or False")
 
     mermaid = getattr(a, "TASK_D_MERMAID_OUTPUT", "")
     record(
@@ -206,9 +217,9 @@ def check_ex2() -> None:
     )
 
     for var, min_w in [("SCENARIO_1_PIVOT_MOMENT", 20), ("SCENARIO_3_ACCEPTABLE", 30),
-                        ("TASK_D_COMPARISON", 30), ("MOST_SURPRISING", 40)]:
+                       ("TASK_D_COMPARISON", 30), ("MOST_SURPRISING", 40)]:
         val = getattr(a, var, "")
-        wc  = word_count(val)
+        wc = word_count(val)
         record(
             PASS if is_filled(val) and wc >= min_w else FAIL,
             f"{var} filled in and ≥ {min_w} words (found {wc})",
@@ -236,7 +247,7 @@ def check_ex3() -> None:
 
     actions_path = ROOT / "exercise3_rasa" / "actions" / "actions.py"
     if actions_path.exists():
-        source = actions_path.read_text()
+        source = actions_path.read_text(encoding="utf-8")
         guard_present = (
             "datetime.datetime.now()" in source
             and "now.hour" in source
@@ -293,9 +304,9 @@ def check_ex3() -> None:
            f"TASK_B_FILES_CHANGED lists at least 1 file (found {len(files) if isinstance(files, list) else 0})")
 
     for var, min_w in [("OUT_OF_SCOPE_COMPARISON", 40), ("SETUP_COST_VALUE", 40),
-                        ("TASK_B_HOW_YOU_TESTED", 20), ("CALM_VS_OLD_RASA", 30)]:
+                       ("TASK_B_HOW_YOU_TESTED", 20), ("CALM_VS_OLD_RASA", 30)]:
         val = getattr(a, var, "")
-        wc  = word_count(val)
+        wc = word_count(val)
         record(
             PASS if is_filled(val) and wc >= min_w else FAIL,
             f"{var} filled in and ≥ {min_w} words (found {wc})",
@@ -347,16 +358,17 @@ def check_ex4() -> None:
            "EX4_EXPERIMENT_DONE = True (you modified venue_server.py and re-ran)")
 
     for var, min_w in [("EX4_EXPERIMENT_RESULT", 30), ("MCP_VALUE_PROPOSITION", 30),
-                        ("GUIDING_QUESTION_ANSWER", 60)]:
+                       ("GUIDING_QUESTION_ANSWER", 60)]:
         val = getattr(a, var, "")
-        wc  = word_count(val)
+        wc = word_count(val)
         record(
             PASS if is_filled(val) and wc >= min_w else FAIL,
             f"{var} filled in and ≥ {min_w} words (found {wc})",
         )
 
     arch = getattr(a, "WEEK_5_ARCHITECTURE", "")
-    bullet_count = sum(1 for line in str(arch).splitlines() if line.strip().startswith("-"))
+    bullet_count = sum(1 for line in str(arch).splitlines()
+                       if line.strip().startswith("-"))
     record(
         PASS if is_filled(arch) and bullet_count >= 5 else FAIL,
         f"WEEK_5_ARCHITECTURE has ≥ 5 bullet points (found {bullet_count})",
@@ -407,9 +419,13 @@ if __name__ == "__main__":
     print(" Reasoning quality and behavioural correctness")
     print(" are graded separately by the instructor.)\n")
 
-    if which in ("all", "ex1"): check_ex1()
-    if which in ("all", "ex2"): check_ex2()
-    if which in ("all", "ex3"): check_ex3()
-    if which in ("all", "ex4"): check_ex4()
+    if which in ("all", "ex1"):
+        check_ex1()
+    if which in ("all", "ex2"):
+        check_ex2()
+    if which in ("all", "ex3"):
+        check_ex3()
+    if which in ("all", "ex4"):
+        check_ex4()
 
     sys.exit(print_results())

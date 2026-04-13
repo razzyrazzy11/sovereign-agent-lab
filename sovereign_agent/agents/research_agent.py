@@ -86,7 +86,21 @@ TOOLS = [
 
 # Build the agent once at module load time.
 # Rebuilding it on every call would be wasteful.
-_agent = create_react_agent(llm, TOOLS)
+# Added a "never output raw JSON" instruction in the prompt to enforce tool use as this stops the model from dumping tool-call plans as text.
+# Added "call tools one at a time" to prevent model from trying to batch everything into one message, triggering text-dump behaviour
+_agent = create_react_agent(
+    llm,
+    TOOLS,
+    prompt=(
+        "You are a venue research assistant for Edinburgh events. "
+        "Always use the provided tools to complete tasks — never output raw JSON. "
+        "Call tools one at a time and wait for each result before deciding the next step. "
+        "When a venue check returns meets_all_constraints: false, "
+        "always try the other known venues before concluding none are available. "
+        "Known venues: The Albanach, The Haymarket Vaults, The Guilford Arms, The Bow Bar. "
+        "Only admit failure after checking all relevant options."
+    ),
+)
 
 
 # ─── Public interface ─────────────────────────────────────────────────────────
@@ -111,18 +125,30 @@ def run_research_agent(task: str, max_turns: int = 8) -> dict:
     """
     result = _agent.invoke(
         {"messages": [("user", task)]},
-        config={"recursion_limit": max_turns * 2},  # LangGraph uses steps, not turns
+        # LangGraph uses steps, not turns
+        config={"recursion_limit": max_turns * 2},
     )
 
     tool_calls_made = []
-    full_trace      = []
-    final_answer    = ""
+    full_trace = []
+    final_answer = ""
 
     for m in result["messages"]:
-        role    = getattr(m, "type", "unknown")
+        role = getattr(m, "type", "unknown")
         content = m.content
 
+        # OpenAI-compatible models store tool calls in m.tool_calls
+        if hasattr(m, "tool_calls") and m.tool_calls:
+            for tc in m.tool_calls:
+                entry = {
+                    "tool": tc["name"],
+                    "args": tc.get("args", {}),
+                }
+                tool_calls_made.append(entry)
+                full_trace.append({"role": "tool_call", **entry})
+
         # Tool-call messages have structured list content
+        # Also check Anthropic-style content blocks (keep for compatibility)
         if isinstance(content, list):
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "tool_use":
