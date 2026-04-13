@@ -33,10 +33,11 @@ LINES_OF_TOOL_CODE_EX4 = 0  # count in exercise4_mcp_client.py
 
 # What does MCP buy you beyond "the tools are in a separate file"? Min 30 words.
 MCP_VALUE_PROPOSITION = """
-Exercise 2 required 113 lines of tool implementation code inside the agent's own codebase: every tool had to be written, maintained, and deployed alongside the agent. 
-Exercise 4 required 0: the MCP client discovers tools at runtime from the server and never owns any tool logic itself. This means tool updates, new venues, or bug fixes in Exercise 4 require no agent redeployment at all. 
-Multiple agents can share a single MCP server simultaneously, always getting current tool definitions and live data. 
-The 113-line gap represents all the code that operation teams no longer need to coordinate with AI engineering teams to change.
+Exercise 2 required 113 lines of tool implementation code in venue_tools.py that had to be written, maintained, and deployed as part of the agent's own codebase. Every tool change would require touching agent code.
+Exercise 4 required 0: the MCP client discovers tools at runtime from the server and never owns any tool logic itself. 
+This means tool updates, new venues, or bug fixes in Exercise 4 require no agent redeployment at all. Multiple agents can share a single MCP server simultaneously, always getting current tool definitions and live data.
+There was some proof of this in the experiment: changing The Albanach's status to full in mcp_venue_server.py changed what search_venues returned, with zero changes to the agent or client code.
+The live data decoupling is what 113 lines gets you when they move to the server side.
 """
 
 # ── Week 5 architecture ────────────────────────────────────────────────────
